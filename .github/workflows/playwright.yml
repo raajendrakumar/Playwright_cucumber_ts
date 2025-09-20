@@ -1,27 +1,39 @@
-name: Playwright Tests
+name: Playwright Test Pipeline
+
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
+
 jobs:
   test:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 16
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Cucumber tests
-      run: npm test
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: Report
-        path: test-results
-        retention-days: 2
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: Install system dependencies for Playwright
+        run: |
+          sudo apt update
+          sudo apt install -y libnss3 libxss1 \
+              libasound2tss alsa-utils \
+              libatk1.0-0 libcups2 libxcomposite1 libxdamage1 \
+              libxrandr2 libgbm1 libpango1.0-0 \
+              libffi8 libx264-dev libx11-6 libxext6 libxrender1 libxinerama1 \
+              fonts-liberation fonts-liberation2 fonts-dejavu
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test --reporter=list
